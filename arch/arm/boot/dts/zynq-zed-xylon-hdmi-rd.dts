@@ -1,0 +1,317 @@
+/*
+ *  Copyright (C) 2011 - 2014 Xilinx
+ *  Copyright (C) 2012 National Instruments Corp.
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+/dts-v1/;
+/include/ "zynq-7000.dtsi"
+
+/ {
+	model = "Zynq Zed Development Board";
+	compatible = "xlnx,zynq-zed", "xlnx,zynq-7000";
+
+	aliases {
+		ethernet0 = &gem0;
+		serial0 = &uart1;
+		spi0 = &qspi;
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x0 0x10000000>;
+	};
+
+	chosen {
+		bootargs = "console=ttyPS0,115200 root=/dev/ram rw ip=dhcp earlyprintk";
+		linux,stdout-path = "/amba/serial@e0001000";
+	};
+};
+
+&qspi {
+	status = "okay";
+	is-dual = <0>;
+	num-cs = <1>;
+	flash@0 {
+		compatible = "n25q128a11";
+		reg = <0x0>;
+		spi-tx-bus-width = <1>;
+		spi-rx-bus-width = <4>;
+		spi-max-frequency = <50000000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		partition@qspi-fsbl-uboot {
+			label = "qspi-fsbl-uboot";
+			reg = <0x0 0x100000>;
+		};
+		partition@qspi-linux {
+			label = "qspi-linux";
+			reg = <0x100000 0x500000>;
+		};
+		partition@qspi-device-tree {
+			label = "qspi-device-tree";
+			reg = <0x600000 0x20000>;
+		};
+		partition@qspi-rootfs {
+			label = "qspi-rootfs";
+			reg = <0x620000 0x5E0000>;
+		};
+		partition@qspi-bitstream {
+			label = "qspi-bitstream";
+			reg = <0xC00000 0x400000>;
+		};
+	};
+};
+
+&usb0 {
+	status = "okay";
+	dr_mode = "host";
+	phy_type = "ulpi";
+};
+
+&gem0 {
+	status = "okay";
+	phy-mode = "rgmii-id";
+	phy-handle = <&phy0>;
+
+	phy0: phy@0 {
+		reg = <0>;
+	};
+};
+
+&sdhci0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <400000>;
+
+	adv7511: adv7511@39 {
+		compatible = "adv7511";
+		reg = <0x39>;
+		interrupts = <0 58 4>;
+		interrupt-parent = <&intc>;
+		dma-request = <&logicvc_0>;
+		edid-addr = <0x50>;
+		video-input {
+			input-id = <1>;
+			input-style = <2>;
+			input-color-depth = <8>;
+			bit-justification = <1>;
+			hsync-polarity = <0>;
+			vsync-polarity = <0>;
+			clock-delay = <3>;
+		};
+		video-output {
+			hdmi-mode = <0>;
+			output-format = <0>;
+			output-color-space = <0>;
+			up-conversion = <0>;
+			csc-enable = <1>;
+			csc-scaling-factor = <2>;
+			csc-coefficients {
+				a1 = <0x0B37>;
+				a2 = <0x0800>;
+				a3 = <0x0000>;
+				a4 = <0x1A86>;
+				b1 = <0x1A49>;
+				b2 = <0x0800>;
+				b3 = <0x1D3F>;
+				b4 = <0x0422>;
+				c1 = <0x0000>;
+				c2 = <0x0800>;
+				c3 = <0x0E2D>;
+				c4 = <0x1914>;
+			};
+		};
+	};
+};
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <400000>;
+
+	i2cswitch@70 {
+		compatible = "nxp,pca9546";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x70>;
+
+		reset-gpios = <&gpio0 54 1>;
+
+		i2c@2 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <2>;
+
+			adv7611: hdmi-rx@4c {
+				compatible = "adv7611";
+				reg = <0x4c>;
+
+				reset-gpios = <&pca9534 0 1>;
+			};
+		};
+
+		i2c@3 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <3>;
+
+			pca9534: gpio@20 {
+				compatible = "nxp,pca9534";
+				reg = <0x20>;
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
+		};
+	};
+};
+
+/ {
+	logiclk_0: clock-generator@40010000 {
+		compatible = "xylon,logiclk-1.02.b";
+		reg = <0x40010000 0x1000>;
+		bandwidth-high;
+		input-frequency = <100000000>;
+		input-divide = <1>;
+		input-multiply = <9>;
+		input-phase = <0>;
+		precise-output = <&clkout_0>;
+		clkout_0: output_0 {
+			#clock-cells = <0>;
+			frequency = <74250000>;
+			divide = <6>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_1: output_1 {
+			#clock-cells = <0>;
+			frequency = <148500000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_2: output_2 {
+			#clock-cells = <0>;
+			frequency = <30000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_3: output_3 {
+			#clock-cells = <0>;
+			frequency = <40000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_4: output_4 {
+			#clock-cells = <0>;
+			frequency = <50000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_5: output_5 {
+			#clock-cells = <0>;
+			frequency = <60000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+	};
+
+	logicvc_0: logicvc@40030000 {
+		compatible = "xylon,logicvc-4.00.a";
+		reg = <0x40030000 0x6000>;
+		interrupt-parent = <&intc>;
+		interrupts = <0 57 0>;
+		background-layer-bits-per-pixel = <32>;
+		background-layer-type = "rgb";
+		hsync-active-low;
+		vsync-active-low;
+		size-position;
+		pixel-stride = <2048>;
+		layer_0 {
+			address = <0x138F4000>;
+			buffer-offset = <1080>;
+			bits-per-pixel = <32>;
+			type = "rgb";
+			transparency = "pixel";
+		};
+		layer_1 {
+			address = <0x11FA4000>;
+			buffer-offset = <1080>;
+			bits-per-pixel = <32>;
+			type = "rgb";
+			transparency = "layer";
+		};
+		layer_2 {
+			address = <0x10000000>;
+			buffer-offset = <1080>;
+			bits-per-pixel = <32>;
+			type = "rgb";
+			transparency = "layer";
+		};
+		layer_3 {
+			address = <0x11950000>;
+			buffer-offset = <1080>;
+			bits-per-pixel = <8>;
+			type = "rgb";
+			transparency = "clut32";
+		};
+	};
+	xylon_fb {
+		compatible = "xylon,fb-3.00.a";
+		clocks = <&clkout_0>;
+		device = <&logicvc_0>;
+		console-layer = <3>;
+		video-mode = "1024x768";
+	};
+
+	logiwin_0: logiwin@0x400e0000 {
+		compatible = "xylon,logiwin-4.00.a";
+		reg = <0x400e0000 0x1000>;
+		interrupt-parent = <&intc>;
+		interrupts = <0 53 4>;
+		input-num = <1>;
+		input-format = "itu";
+		input-resolution = <1280 720>;
+		output-format = "argb8888";
+		output-resolution = <2048 768>;
+		output-byte-align = <1>;
+		scale-fraction-bits = <6>;
+	};
+
+	logii2s0: logii2s@40100000 {
+		compatible = "xylon,logii2s-2.00.a";
+		reg = <0x40100000 0x1000>;
+		interrupt-parent = <&intc>;
+		interrupts = <0 54 4>;
+		core-clock-frequency = <100000000>;
+		instance_0 {
+			i2s-clock-frequency = <12500000>;
+			fifo-size = <512>;
+			almost-full-level = <170>;
+			almost-empty-level = <85>;
+		};
+		instance_1 {
+			i2s-clock-frequency = <12500000>;
+			fifo-size = <512>;
+			almost-full-level = <170>;
+			almost-empty-level = <85>;
+		};
+	};
+};

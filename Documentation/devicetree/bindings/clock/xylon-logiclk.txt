@@ -1,0 +1,100 @@
+Device tree clock bindings for the Xylon logiCLK IP core programmable clock
+generator for Xilinx FPGA devices.
+
+The logiCLK IP core device contains six clock outputs which can be configured
+independently through here described device tree binding.
+
+See clock_bindings.txt for more information on the generic clock bindings.
+
+Limitation:
+One clock output must be set as "maximum precision" output, which gives the
+most accurate frequency limited with hw input multiplier, divider and output
+divider, in allowed frequency range.
+Other clock outputs can give any frequency in allowed range, but with precision
+which depends on hw input multiplier and divider, calculated for
+"maximum precision" clock. Output divider is independent for every clock output.
+
+In real usage scenario, any output can give exact frequency or frequency with
++/- deviation, depending on calculated hw input multiplier and divider.
+Default logiCLK output frequencies are set with hw configuration parameters.
+Hw configuration parameters are provided to logiCLK driver through device tree
+configuration.
+
+Required properties:
+ - compatible: "xylon,logiclk-1.02.b"
+ - reg : Base address with page sized logiCLK IP core address space
+ - input-frequency: Input clock frequency used for generating output clock
+                    frequencies
+ - input-divide: Hw configuration input clock divider
+ - input-multiply: Hw configuration input clock multiplier
+ - input-phase: Hw configuration input clock phase
+ - precise-output: Phandle to "maximum precision" clock output
+
+Optional properties:
+ - bandwidth-high: Hw configuration filter parameters selection
+                   If omitted, low bandwidth filter parameters are used.
+
+Clock output:
+Required properties:
+ - #clock-cells: Must be set to 0
+ - divide: Hw configuration output clock divider
+ - duty: Hw configuration output clock duty cycle
+ - phase: Hw configuration output clock phase
+Optional properties:
+ - frequency: Default output clock frequency
+              If omitted, output clock frequency is set according to hw
+              configuration parameters.
+
+Example:
+	logiclk_0: clock-generator@40010000 {
+		compatible = "xylon,logiclk-1.02.b";
+		reg = <0x40010000 0x1000>;
+		bandwidth-high;
+		input-frequency = <100000000>;
+		input-divide = <1>;
+		input-multiply = <9>;
+		input-phase = <0>;
+		precise-output = <&clkout_0>;
+		clkout_0: output_0 {
+			#clock-cells = <0>;
+			frequency = <74250000>;
+			divide = <6>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_1: output_1 {
+			#clock-cells = <0>;
+			frequency = <148500000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_2: output_2 {
+			#clock-cells = <0>;
+			frequency = <30000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_3: output_3 {
+			#clock-cells = <0>;
+			frequency = <40000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_4: output_4 {
+			#clock-cells = <0>;
+			frequency = <50000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+		clkout_5: output_5 {
+			#clock-cells = <0>;
+			frequency = <60000000>;
+			divide = <9>;
+			duty = <50000>;
+			phase = <0>;
+		};
+	} ;
